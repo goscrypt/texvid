@@ -1,359 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Text-to-Video (No Install)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8"/>
+  <title>Sample Chibi Boy Sketch</title>
   <style>
-    :root { --bg:#0b0f1a; --fg:#e8ecf1; --acc:#7bd389; --mut:#9aa7b2; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--fg); background:linear-gradient(180deg,#0b0f1a,#101629); }
-    header { padding:16px 20px; border-bottom:1px solid #1f2a44; display:flex; align-items:center; gap:12px; }
-    header h1 { font-size:16px; margin:0; font-weight:600; letter-spacing:0.3px; }
-    main { display:grid; grid-template-columns: 1fr; gap:16px; padding:16px; max-width:1200px; margin:0 auto; }
-    @media (min-width: 1000px) { main { grid-template-columns: 420px 1fr; } }
-    .card { background:#0f1530a8; border:1px solid #233059; border-radius:12px; padding:14px; backdrop-filter: blur(6px); }
-    label { font-size:12px; color:var(--mut); display:block; margin:6px 0; }
-    textarea { width:100%; min-height:180px; resize:vertical; border-radius:10px; border:1px solid #2b3a6a; background:#0b1130; color:var(--fg); padding:12px; font-size:14px; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    input, select { border-radius:10px; border:1px solid #2b3a6a; background:#0b1130; color:var(--fg); padding:10px 12px; font-size:14px; }
-    button { background:var(--acc); color:#0b0f1a; border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
-    button.secondary { background:#1f2a44; color:#cfe3ff; border:1px solid #2b3a6a; }
-    .hint { font-size:12px; color:var(--mut); }
-    .status { font-size:12px; color:#b6f5c3; }
-    .canvas-wrap { display:flex; justify-content:center; }
-    canvas { width: 270px; height: 480px; border-radius:14px; border:1px solid #233059; background:#000; }
-    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .progress { height:8px; background:#1a2340; border:1px solid #2b3a6a; border-radius:8px; overflow:hidden; }
-    .bar { height:100%; width:0%; background:linear-gradient(90deg,#67e8a4,#3dd5f3); transition:width .2s; }
-    .dl { margin-top:10px; display:flex; gap:10px; align-items:center; }
-    a.download { color:#a6e3ff; text-decoration:underline; font-size:14px; }
+    body { margin:0; background:#FAFAF8; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    canvas { display:block; border:1px solid #DDD; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Text-to-Video (Local, No Install)</h1>
-  </header>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5.scribble@1.0.7/p5.scribble.min.js"></script>
 
-  <main>
-    <section class="card">
-      <label for="script">Your idea or script</label>
-      <textarea id="script" placeholder="Example: Make a 3-scene video teaching the Pomodoro Technique. Scene 1: Hook. Scene 2: Steps. Scene 3: Call-to-action. Short, punchy lines."></textarea>
+  <script>
+    let s; // Declare the scribble object globally
 
-      <div class="grid" style="margin-top:10px;">
-        <div>
-          <label>Duration per scene (seconds)</label>
-          <input id="sceneSec" type="number" min="1" max="10" value="3" />
-        </div>
-        <div>
-          <label>Font size</label>
-          <input id="fontSize" type="number" min="24" max="96" value="54" />
-        </div>
-      </div>
+    function setup() {
+      createCanvas(400, 500); // Now createCanvas should be defined
+      
+      // Initialize p5.scribble object
+      // When using p5.js in global mode, 'this' refers to the global p5 object.
+      // Some versions of p5.scribble expect `p5` directly, others `this`.
+      // `new p5.Scribble()` (without 'this' or 'p') often works best in global mode
+      // if the library attaches itself correctly to the global 'p5' object.
+      s = new p5.Scribble(); 
+      
+      // Set scribble properties for light, pencil-drawn look
+      s.maxOffset = 0.8; 
+      s.minOffset = 0.3;
+      s.strokeWidth = 0.6; // Thin stroke
 
-      <div class="grid" style="margin-top:10px;">
-        <div>
-          <label>Theme</label>
-          <select id="theme">
-            <option value="dark">Dark neon</option>
-            <option value="light">Clean light</option>
-            <option value="pop">Pop gradient</option>
-            <option value="sunset">Sunset</option>
-          </select>
-        </div>
-        <div>
-          <label>Transition</label>
-          <select id="transition">
-            <option value="slide">Slide</option>
-            <option value="fade">Fade</option>
-            <option value="zoom">Zoom</option>
-            <option value="none">None</option>
-          </select>
-        </div>
-      </div>
+      noLoop(); // We only draw once
+    }
 
-      <div class="row" style="margin-top:12px;">
-        <button id="gen">Generate & Render</button>
-        <button id="stop" class="secondary">Stop</button>
-        <span class="status" id="status"></span>
-      </div>
+    function draw() {
+      background('#FAFAF8'); // Light background
+      drawChibiBoy(width / 2, 250); // Draw in the middle of the canvas
+    }
 
-      <div class="progress" style="margin-top:10px;"><div class="bar" id="bar"></div></div>
-      <div class="dl" id="dl"></div>
-      <p class="hint">Tip: Keep lines short. Each blank line starts a new scene. Auto line-wrapping is included.</p>
-    </section>
+    // Function to draw a sample Chibi Boy character
+    function drawChibiBoy(cx, cy) {
+      stroke(51); // Dark grey stroke
+      noFill();   // No fill for scribble shapes
 
-    <section class="card">
-      <label>Preview</label>
-      <div class="canvas-wrap">
-        <canvas id="c" width="1080" height="1920"></canvas>
-      </div>
-    </section>
-  </main>
+      // --- Head ---
+      s.scribbleEllipse(cx, cy - 80, 160, 160); // Head (larger circle)
 
-<script>
-(function(){
-  const $ = (id) => document.getElementById(id);
-  const canvas = $('c');
-  const ctx = canvas.getContext('2d');
+      // --- Eyes ---
+      s.scribbleEllipse(cx - 30, cy - 95, 40, 25); // Left eye outline
+      s.scribbleEllipse(cx + 30, cy - 95, 40, 25); // Right eye outline
+      
+      // Pupils (solid circles)
+      noStroke(); 
+      fill(51); // Black fill for pupils
+      circle(cx - 30, cy - 95, 12);
+      circle(cx + 30, cy - 95, 12);
+      stroke(51); // Reset stroke for scribble
+      noFill();   // Reset noFill for scribble
 
-  const state = {
-    stop: false,
-    chunks: [],
-    recorder: null,
-    stream: null,
-  };
+      // --- Mouth (a simple line smile) ---
+      s.scribbleLine(cx - 20, cy - 50, cx, cy - 40);
+      s.scribbleLine(cx, cy - 40, cx + 20, cy - 50);
 
-  const palettes = {
-    dark: { bg: '#0a0e1a', fg: '#eaf4ff', acc: '#7bd389', sub: '#9fb3c8' },
-    light: { bg: '#ffffff', fg: '#0a0e1a', acc: '#0ea5e9', sub: '#334155' },
-    pop:  { bg: '#0d0b1a', fg: '#fff8f0', acc: '#ff69b4', sub: '#d1d5db' },
-    sunset: { bg: '#0b1020', fg: '#fef3c7', acc: '#fb7185', sub: '#fde68a' },
-  };
+      // --- Hair (simple bangs and side hair) ---
+      // Arc for top of head
+      s.scribbleArc(cx, cy - 160, 180, 180, PI * 1.2, PI * 1.8);
 
-  function setStatus(t){ $('status').textContent = t || ''; }
-  function setBar(p){ $('bar').style.width = (p*100).toFixed(0)+'%'; }
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-  // 1) Parse user text into scenes
-  function parseScenes(text){
-    const blocks = text.trim().split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
-    // If no blank lines, split by sentences as fallback
-    let scenes = blocks.length ? blocks : text.split(/(?<=[.!?])\s+/).filter(Boolean);
-    // Clean and limit length
-    scenes = scenes.map(s => s.replace(/\s+/g,' ').trim()).filter(Boolean);
-    if (scenes.length === 0) scenes = ['Write a short, punchy hook.', 'Deliver a simple tip.', 'Call to action.'];
-    return scenes.slice(0, 12); // keep it short for mobile
-  }
-
-  // 2) Wrap text for given width
-  function wrapText(text, maxWidth, lineHeight, font){
-    ctx.font = font;
-    const words = text.split(' ');
-    const lines = [];
-    let line = '';
-    for (let w of words){
-      const test = line ? line + ' ' + w : w;
-      const width = ctx.measureText(test).width;
-      if (width <= maxWidth) {
-        line = test;
-      } else {
-        if (line) lines.push(line);
-        line = w;
+      // Bangs (scribbled lines)
+      for (let i = -3; i <= 3; i++) {
+        let x1 = cx + (i * 10) + random(-5, 5);
+        let y1 = cy - 160 + random(-5, 5);
+        let x2 = cx + (i * 15) + random(-8, 8);
+        let y2 = cy - 120 + random(-5, 5);
+        s.scribbleLine(x1, y1, x2, y2);
       }
+      
+      // Side hair (curved lines)
+      s.scribbleLine(cx - 80, cy - 100, cx - 120, cy - 60);
+      s.scribbleLine(cx + 80, cy - 100, cx + 120, cy - 60);
+
+      // --- Body (simple rectangle) ---
+      s.scribbleRect(cx, cy + 10, 80, 100);
+
+      // --- Arms (simple lines with circular hands) ---
+      s.scribbleLine(cx - 40, cy - 20, cx - 80, cy + 30); // Left arm
+      s.scribbleEllipse(cx - 80, cy + 30, 25, 25);       // Left hand
+
+      s.scribbleLine(cx + 40, cy - 20, cx + 80, cy + 30); // Right arm
+      s.scribbleEllipse(cx + 80, cy + 30, 25, 25);       // Right hand
+
+      // --- Legs (simple lines with oval feet) ---
+      s.scribbleLine(cx - 20, cy + 60, cx - 20, cy + 120); // Left leg
+      s.scribbleEllipse(cx - 20, cy + 135, 30, 20);        // Left foot
+
+      s.scribbleLine(cx + 20, cy + 60, cx + 20, cy + 120); // Right leg
+      s.scribbleEllipse(cx + 20, cy + 135, 30, 20);        // Right foot
     }
-    if (line) lines.push(line);
-    return lines;
-  }
-
-  // 3) Draw background with theme and subtle shapes
-  function drawBg(t, theme){
-    const { bg, acc } = palettes[theme];
-    // gradient bg
-    const g = ctx.createLinearGradient(0,0,0,canvas.height);
-    g.addColorStop(0, bg);
-    g.addColorStop(1, shade(bg, 0.15));
-    ctx.fillStyle = g; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    // subtle blobs animated by t
-    const r = (min,max)=>min + (max-min)*0.5*(1+Math.sin(t));
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = acc;
-    for (let i=0;i<3;i++){
-      const x = r(100, canvas.width-100) + i*120*Math.cos(t*0.3+i);
-      const y = r(200, canvas.height-200) + i*180*Math.sin(t*0.27+i*0.7);
-      const rad = r(120, 260) + i*20;
-      roundedBlob(x,y,rad);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function roundedBlob(x,y,r){
-    ctx.beginPath();
-    for (let i=0;i<6;i++){
-      const angle = (i/6)*Math.PI*2;
-      const nx = x + Math.cos(angle)*r;
-      const ny = y + Math.sin(angle)*r*0.8;
-      i===0 ? ctx.moveTo(nx,ny) : ctx.quadraticCurveTo(x,y,nx,ny);
-    }
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  function shade(hex, amt){
-    const c = hex.replace('#','');
-    const num = parseInt(c,16);
-    let r=(num>>16)+Math.round(255*amt);
-    let g=((num>>8)&0x00FF)+Math.round(255*amt);
-    let b=(num&0x0000FF)+Math.round(255*amt);
-    r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); b=Math.max(0,Math.min(255,b));
-    return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
-  }
-
-  // 4) Render a single scene with a simple intro transition
-  function renderScene({ text, theme, fontSize, transition, durationSec, idx, total, t0 }){
-    const pad = 72;
-    const font = `700 ${fontSize}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto`;
-    const subFont = `500 ${Math.round(fontSize*0.45)}px ui-sans-serif, system-ui`;
-
-    const W = canvas.width, H = canvas.height;
-    const maxTextWidth = W - pad*2;
-
-    const lines = wrapText(text, maxTextWidth, fontSize*1.2, font);
-    const blockH = lines.length * fontSize * 1.2;
-    const yStart = H/2 - blockH/2;
-
-    // time-based easing
-    const now = performance.now();
-    const t = (now - t0) / 1000; // seconds in this scene
-    const p = Math.min(1, Math.max(0, t / durationSec));
-    const ease = (x)=> x<.5 ? 4*x*x*x : 1 - Math.pow(-2*x+2, 3)/2;
-
-    // background
-    drawBg(now*0.001 + idx*0.5, theme);
-
-    // transition effect
-    ctx.save();
-    if (transition==='fade'){
-      ctx.globalAlpha = 0.4 + 0.6*ease(p);
-    } else if (transition==='slide'){
-      const off = (1 - ease(p)) * (W*0.3);
-      ctx.translate(off, 0);
-    } else if (transition==='zoom'){
-      const s = 0.9 + 0.1*ease(p);
-      ctx.translate(W/2, H/2);
-      ctx.scale(s, s);
-      ctx.translate(-W/2, -H/2);
-    }
-    // text outline for readability
-    const { fg, acc, sub } = palettes[theme];
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // shadow
-    ctx.shadowColor = 'rgba(0,0,0,0.6)';
-    ctx.shadowBlur = 24;
-
-    // headline lines
-    ctx.font = font;
-    ctx.fillStyle = fg;
-    lines.forEach((line, i) => {
-      const y = yStart + i * fontSize * 1.2;
-      // subtle per-line slide-in
-      const lineOffset = 30*(1 - ease(Math.min(1, p*1.2 - i*0.08)));
-      ctx.fillText(line, W/2, y + lineOffset);
-    });
-
-    // progress subline
-    ctx.font = subFont;
-    ctx.fillStyle = sub;
-    ctx.shadowBlur = 18;
-    const subText = `Scene ${idx+1} / ${total}`;
-    ctx.fillText(subText, W/2, H - 120);
-
-    // accent bar
-    ctx.shadowBlur = 0;
-    const barW = Math.round((W*0.6) * p);
-    ctx.fillStyle = acc;
-    ctx.fillRect((W - W*0.6)/2, H - 90, barW, 10);
-    ctx.restore();
-
-    return p >= 1;
-  }
-
-  // 5) Record the canvas to WebM
-  function startRecording(){
-    state.chunks = [];
-    const fps = 30;
-    state.stream = canvas.captureStream(fps);
-    state.recorder = new MediaRecorder(state.stream, {
-      mimeType: 'video/webm;codecs=vp9' // fallback to vp8 if needed
-    });
-    state.recorder.ondataavailable = (e)=>{ if(e.data.size>0) state.chunks.push(e.data); };
-    state.recorder.onstop = onStopRecording;
-    state.recorder.start(100); // collect in chunks
-  }
-
-  function stopRecording(){
-    try { state.recorder && state.recorder.state !== 'inactive' && state.recorder.stop(); } catch(e){}
-    try { state.stream && state.stream.getTracks().forEach(t=>t.stop()); } catch(e){}
-  }
-
-  function onStopRecording(){
-    const blob = new Blob(state.chunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `text2video_${Date.now()}.webm`;
-    a.textContent = 'Download video (WebM)';
-    a.className = 'download';
-    $('dl').innerHTML = '';
-    $('dl').appendChild(a);
-  }
-
-  // 6) Orchestrate the whole render
-  async function renderAll(){
-    state.stop = false;
-    $('dl').innerHTML = '';
-    setStatus('Parsing scenes...');
-    setBar(0);
-
-    const theme = $('theme').value;
-    const transition = $('transition').value;
-    const sceneSec = Math.max(1, Math.min(10, parseInt($('sceneSec').value || '3', 10)));
-    const fontSize = Math.max(24, Math.min(96, parseInt($('fontSize').value || '54', 10)));
-
-    const scenes = parseScenes($('script').value);
-    const totalDur = scenes.length * sceneSec;
-    let elapsed = 0;
-
-    setStatus(`Rendering ${scenes.length} scene(s)...`);
-    startRecording();
-
-    for (let i=0;i<scenes.length;i++){
-      if (state.stop) break;
-      const start = performance.now();
-      const scene = { text: scenes[i], theme, fontSize, transition, durationSec: sceneSec, idx:i, total:scenes.length, t0: start };
-      // Animate frame-by-frame
-      let done = false;
-      while(!done){
-        done = renderScene(scene);
-        setBar((elapsed + Math.min(sceneSec, (performance.now()-start)/1000)) / totalDur);
-        await sleep(1000/30); // ~30fps
-        if (state.stop) break;
-      }
-      elapsed += sceneSec;
-    }
-
-    stopRecording();
-    setStatus(state.stop ? 'Stopped.' : 'Done.');
-    setBar(1);
-  }
-
-  // UI wiring
-  $('gen').addEventListener('click', async ()=>{
-    if (!('MediaRecorder' in window) || !HTMLCanvasElement.prototype.captureStream){
-      alert('Your browser does not support captureStream/MediaRecorder. Try Chrome/Edge.');
-      return;
-    }
-    setStatus('Starting...');
-    $('dl').innerHTML = '';
-    renderAll();
-  });
-
-  $('stop').addEventListener('click', ()=>{
-    state.stop = true;
-    stopRecording();
-    setStatus('Stopping...');
-  });
-
-  // Default sample
-  $('script').value = [
-    'Hook: You’re wasting focus—here’s a 25-minute fix.',
-    'Steps: 25 minutes work, 5 minutes break. Repeat 4 times, then take a 15-minute break.',
-    'Call to action: Try one Pomodoro now. Comment “DONE” when you finish.'
-  ].join('\n\n');
-
-})();
-</script>
+  </script>
 </body>
 </html>
-a
